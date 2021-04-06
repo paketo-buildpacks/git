@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/pexec"
@@ -40,7 +41,7 @@ func Build(executable Executable, logs LogEmitter) packit.BuildFunc {
 			return packit.BuildResult{}, fmt.Errorf("failed to execute 'git rev-parse HEAD': %w", err)
 		}
 
-		revision := buffer.String()
+		revision := strings.TrimSpace(buffer.String())
 
 		varsLayer.Launch = true
 		varsLayer.LaunchEnv.Default("REVISION", revision)

@@ -14,53 +14,49 @@ import (
 	"github.com/sclevine/spec/report"
 )
 
-var (
-	buildpack        string
-	offlineBuildpack string
-
-	buildpackInfo struct {
-		Buildpack struct {
-			ID   string
-			Name string
-		}
+var settings struct {
+	Buildpacks struct {
+		Git    string
+		GoDist string
 	}
-
-	config struct {
-		SomeBuildpack string `json:"some-buildpack"`
+	Buildpack struct {
+		Name string
+		ID   string
 	}
-)
+	Config struct {
+		GoDist string `json:"go-dist"`
+	}
+}
 
 func TestIntegration(t *testing.T) {
 	Expect := NewWithT(t).Expect
 
+	file, err := os.Open("../integration.json")
+	Expect(err).NotTo(HaveOccurred())
+
+	Expect(json.NewDecoder(file).Decode(&settings.Config)).To(Succeed())
+	Expect(file.Close()).To(Succeed())
+
+	file, err = os.Open("../buildpack.toml")
+	Expect(err).NotTo(HaveOccurred())
+
+	_, err = toml.DecodeReader(file, &settings)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(file.Close()).To(Succeed())
+
 	root, err := filepath.Abs("./..")
 	Expect(err).ToNot(HaveOccurred())
 
-	file, err := os.Open("../buildpack.toml")
-	Expect(err).NotTo(HaveOccurred())
-
-	_, err = toml.DecodeReader(file, &buildpackInfo)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(file.Close()).To(Succeed())
-
-	file, err = os.Open("../integration.json")
-	Expect(err).NotTo(HaveOccurred())
-
-	Expect(json.NewDecoder(file).Decode(&config)).To(Succeed())
-	Expect(file.Close()).To(Succeed())
-
 	buildpackStore := occam.NewBuildpackStore()
 
-	buildpack, err = buildpackStore.Get.
+	settings.Buildpacks.Git, err = buildpackStore.Get.
 		WithVersion("1.2.3").
 		Execute(root)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).ToNot(HaveOccurred())
 
-	offlineBuildpack, err = buildpackStore.Get.
-		WithOfflineDependencies().
-		WithVersion("1.2.3").
-		Execute(root)
-	Expect(err).NotTo(HaveOccurred())
+	settings.Buildpacks.GoDist, err = buildpackStore.Get.
+		Execute(settings.Config.GoDist)
+	Expect(err).ToNot(HaveOccurred())
 
 	SetDefaultEventuallyTimeout(5 * time.Second)
 

@@ -15,7 +15,9 @@ import (
 
 func testDefault(t *testing.T, context spec.G, it spec.S) {
 	var (
-		Expect = NewWithT(t).Expect
+		Expect     = NewWithT(t).Expect
+		Eventually = NewWithT(t).Eventually
+
 		pack   occam.Pack
 		docker occam.Docker
 	)
@@ -46,30 +48,36 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.RemoveAll(source)).To(Succeed())
 		})
 
-		it("builds an oci image has the correct beavior", func() {
-			t.Fatal("Not Implemented")
-
+		it("builds an oci image with git environment variables", func() {
 			var err error
 			source, err = occam.Source(filepath.Join("testdata", "default_app"))
 			Expect(err).NotTo(HaveOccurred())
 
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
-				WithNoPull().
+				WithPullPolicy("never").
 				WithBuildpacks(
-					buildpack,
+					settings.Buildpacks.Git,
+					settings.Buildpacks.GoDist,
 				).
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
 
-			// Test to make sure the container is running correctly
-
 			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
-				"  Executing build process",
-				"    &lt;&lt;&lt; Doing what the buildpack does >>>",
-				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
+				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
+				"  Configuring launch environment",
+				"    REVISION -> \"bd8fa16be21b2db60483b7d2bee50bbc3bde2995\"",
 			))
+
+			container, err = docker.Container.Run.
+				WithCommand("go run main.go").
+				WithEnv(map[string]string{"PORT": "8080"}).
+				WithPublish("8080").
+				WithPublishAll().
+				Execute(image.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(container).Should(Serve(ContainSubstring("bd8fa16be21b2db60483b7d2bee50bbc3bde2995")).OnPort(8080))
 		})
 	})
 }
