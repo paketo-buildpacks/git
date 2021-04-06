@@ -61,7 +61,7 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-				"  Configuring launch environment",
+				"  Configuring shared environment",
 				"    REVISION -> \"a098952bf1bbecb4c5efbfd5da68a8716f17d872\"",
 			))
 

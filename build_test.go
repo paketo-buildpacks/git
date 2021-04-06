@@ -81,9 +81,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				{
 					Name:             "git",
 					Path:             filepath.Join(layersDir, "git"),
+					Build:            true,
 					Launch:           true,
-					LaunchEnv:        map[string]string{"REVISION.default": "sha123456789"},
-					SharedEnv:        packit.Environment{},
+					LaunchEnv:        packit.Environment{},
+					SharedEnv:        map[string]string{"REVISION.default": "sha123456789"},
 					BuildEnv:         packit.Environment{},
 					ProcessLaunchEnv: map[string]packit.Environment{},
 				},

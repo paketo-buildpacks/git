@@ -44,9 +44,11 @@ func Build(executable Executable, logs LogEmitter) packit.BuildFunc {
 		revision := strings.TrimSpace(buffer.String())
 
 		varsLayer.Launch = true
-		varsLayer.LaunchEnv.Default("REVISION", revision)
-		logs.Process("Configuring launch environment")
-		logs.Subprocess("%s", scribe.NewFormattedMapFromEnvironment(varsLayer.LaunchEnv))
+		varsLayer.Build = true
+		varsLayer.SharedEnv.Default("REVISION", revision)
+
+		logs.Process("Configuring shared environment")
+		logs.Subprocess("%s", scribe.NewFormattedMapFromEnvironment(varsLayer.SharedEnv))
 		logs.Break()
 
 		return packit.BuildResult{
