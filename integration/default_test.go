@@ -15,8 +15,7 @@ import (
 
 func testDefault(t *testing.T, context spec.G, it spec.S) {
 	var (
-		Expect     = NewWithT(t).Expect
-		Eventually = NewWithT(t).Eventually
+		Expect = NewWithT(t).Expect
 
 		pack   occam.Pack
 		docker occam.Docker
@@ -56,28 +55,25 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
 				WithPullPolicy("never").
-				WithBuildpacks(
-					settings.Buildpacks.Git,
-					settings.Buildpacks.GoDist,
-				).
+				WithBuildpacks(settings.Buildpacks.Git).
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
 
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Configuring launch environment",
-				"    REVISION -> \"bd8fa16be21b2db60483b7d2bee50bbc3bde2995\"",
+				"    REVISION -> \"a098952bf1bbecb4c5efbfd5da68a8716f17d872\"",
 			))
 
 			container, err = docker.Container.Run.
-				WithCommand("go run main.go").
-				WithEnv(map[string]string{"PORT": "8080"}).
-				WithPublish("8080").
-				WithPublishAll().
+				WithCommand("echo $REVISION").
 				Execute(image.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(container).Should(Serve(ContainSubstring("bd8fa16be21b2db60483b7d2bee50bbc3bde2995")).OnPort(8080))
+			logs, err = docker.Container.Logs.Execute(container.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(logs).To(ContainSubstring("a098952bf1bbecb4c5efbfd5da68a8716f17d872"))
 		})
 	})
 }
