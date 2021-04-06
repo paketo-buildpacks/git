@@ -1,10 +1,21 @@
 package main
 
 import (
-	"github.com/paketo-buildpacks/packit"
+	"os"
+
 	git "github.com/paketo-buildpacks/git"
+	"github.com/paketo-buildpacks/packit"
+	"github.com/paketo-buildpacks/packit/pexec"
 )
 
 func main() {
-	packit.Run(git.Detect(), git.Build())
+	logEmitter := git.NewLogEmitter(os.Stdout)
+
+	packit.Run(
+		git.Detect(),
+		git.Build(
+			pexec.NewExecutable("git"),
+			logEmitter,
+		),
+	)
 }
