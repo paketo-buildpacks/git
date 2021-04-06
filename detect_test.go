@@ -3,10 +3,11 @@ package git_test
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/paketo-buildpacks/packit"
 	git "github.com/paketo-buildpacks/git"
+	"github.com/paketo-buildpacks/packit"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -32,13 +33,27 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
-	context("when conditions for detect true are met", func() {
+	context("when a .git directory is present", func() {
+		it.Before(func() {
+			err := os.Mkdir(filepath.Join(workingDir, ".git"), os.ModeDir)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		it("detects", func() {
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.Plan).To(Equal(packit.BuildPlan{}))
+		})
+	})
+
+	context("when a .git directory is not present", func() {
+		it("detects", func() {
+			_, err := detect(packit.DetectContext{
+				WorkingDir: workingDir,
+			})
+			Expect(err).To(MatchError(packit.Fail.WithMessage("failed to find .git directory")))
 		})
 	})
 }
