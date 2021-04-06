@@ -2,6 +2,7 @@ package git_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/paketo-buildpacks/git/fakes"
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/pexec"
+	"github.com/paketo-buildpacks/packit/scribe"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -26,7 +28,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		cnbDir     string
 
 		executable *fakes.Executable
-		logs       *bytes.Buffer
+		buffer     *bytes.Buffer
 
 		build packit.BuildFunc
 	)
@@ -42,7 +44,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir, err = ioutil.TempDir("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
-		logs = bytes.NewBuffer(nil)
+		buffer = bytes.NewBuffer(nil)
+		logger := scribe.NewLogger(buffer)
 
 		executable = &fakes.Executable{}
 		executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
@@ -50,7 +53,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			return nil
 		}
 
-		build = git.Build(executable, git.NewLogEmitter(logs))
+		build = git.Build(executable, logger)
 	})
 
 	it.After(func() {
@@ -90,5 +93,21 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				},
 			},
 		}))
+
+		Expect(buffer.String()).To(ContainSubstring("Some Buildpack some-version"))
+		Expect(buffer.String()).To(ContainSubstring("Configuring shared environment"))
+		Expect(buffer.String()).To(ContainSubstring(`REVISION -> "sha123456789"`))
+	})
+
+	context("when the executable fails", func() {
+		it.Before(func() {
+			executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
+				return errors.New("some-error")
+			}
+		})
+		it("returns the error", func() {
+			_, err := build(packit.BuildContext{})
+			Expect(err).To(MatchError("failed to execute 'git rev-parse HEAD': some-error"))
+		})
 	})
 }

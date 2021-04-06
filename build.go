@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	LayerNameGitVars = "git"
+	// LayerNameGit is the name of the layer that is used to store git environment variables.
+	LayerNameGit = "git"
 )
 
 //go:generate faux --interface Executable --output fakes/executable.go
@@ -19,11 +20,11 @@ type Executable interface {
 	Execute(pexec.Execution) (err error)
 }
 
-func Build(executable Executable, logs LogEmitter) packit.BuildFunc {
+func Build(executable Executable, logger scribe.Logger) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
-		logs.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
+		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		varsLayer, err := context.Layers.Get(LayerNameGitVars)
+		varsLayer, err := context.Layers.Get(LayerNameGit)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
@@ -37,7 +38,7 @@ func Build(executable Executable, logs LogEmitter) packit.BuildFunc {
 			Stderr: buffer,
 		})
 		if err != nil {
-			logs.Detail(buffer.String())
+			logger.Detail(buffer.String())
 			return packit.BuildResult{}, fmt.Errorf("failed to execute 'git rev-parse HEAD': %w", err)
 		}
 
@@ -47,9 +48,9 @@ func Build(executable Executable, logs LogEmitter) packit.BuildFunc {
 		varsLayer.Build = true
 		varsLayer.SharedEnv.Default("REVISION", revision)
 
-		logs.Process("Configuring shared environment")
-		logs.Subprocess("%s", scribe.NewFormattedMapFromEnvironment(varsLayer.SharedEnv))
-		logs.Break()
+		logger.Process("Configuring shared environment")
+		logger.Subprocess("%s", scribe.NewFormattedMapFromEnvironment(varsLayer.SharedEnv))
+		logger.Break()
 
 		return packit.BuildResult{
 			Layers: []packit.Layer{varsLayer},
