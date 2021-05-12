@@ -1,0 +1,15 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[duet "env"]
+	git-author-initials = rm
+	git-author-name = Ryan Moran
+	git-author-email = rmoran@vmware.com
+	mtime = 1620843101
+	git-committer-initials = 
+	git-committer-name = 
+	git-committer-email = 

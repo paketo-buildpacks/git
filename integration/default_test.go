@@ -38,6 +38,12 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			var err error
 			name, err = occam.RandomName()
 			Expect(err).NotTo(HaveOccurred())
+
+			source, err = occam.Source(filepath.Join("testdata", "default_app"))
+			Expect(err).NotTo(HaveOccurred())
+
+			err = os.Rename(filepath.Join(source, ".git.bak"), filepath.Join(source, ".git"))
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		it.After(func() {
@@ -49,9 +55,6 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 
 		it("builds an oci image with git environment variables", func() {
 			var err error
-			source, err = occam.Source(filepath.Join("testdata", "default_app"))
-			Expect(err).NotTo(HaveOccurred())
-
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
 				WithPullPolicy("never").
@@ -62,7 +65,7 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Configuring shared environment",
-				"    REVISION -> \"a098952bf1bbecb4c5efbfd5da68a8716f17d872\"",
+				"    REVISION -> \"2df6ac40991b695cc6c31faa79926980ff7dc0ff\"",
 			))
 
 			container, err = docker.Container.Run.
@@ -73,7 +76,7 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			logs, err = docker.Container.Logs.Execute(container.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(logs).To(ContainSubstring("a098952bf1bbecb4c5efbfd5da68a8716f17d872"))
+			Expect(logs).To(ContainSubstring("2df6ac40991b695cc6c31faa79926980ff7dc0ff"))
 		})
 	})
 }
