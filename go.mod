@@ -1,11 +1,10 @@
 module github.com/paketo-buildpacks/git
 
-go 1.14
+go 1.16
 
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/fatih/color v1.10.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/onsi/gomega v1.11.0
 	github.com/paketo-buildpacks/occam v0.1.2
 	github.com/paketo-buildpacks/packit v0.10.0
