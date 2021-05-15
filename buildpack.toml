@@ -1,8 +1,8 @@
 api = "0.2"
 
 [buildpack]
-  id = "paketo-buildpacks/git"
-  homepage = "https://github.com/paketo-buildpacks/git"
+  id = "paketo-community/git"
+  homepage = "https://github.com/paketo-community/git"
   name = "Paketo Git Buildpack"
 
 [[stacks]]
