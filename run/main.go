@@ -3,10 +3,10 @@ package main
 import (
 	"os"
 
-	git "github.com/paketo-buildpacks/git"
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/pexec"
 	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-community/git"
 )
 
 func main() {
