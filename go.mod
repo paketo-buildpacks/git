@@ -1,4 +1,4 @@
-module github.com/paketo-buildpacks/git
+module github.com/paketo-community/git
 
 go 1.16
 
