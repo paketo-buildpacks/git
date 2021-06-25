@@ -17,6 +17,7 @@ import (
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
+	. "github.com/paketo-buildpacks/occam/matchers"
 )
 
 func testBuild(t *testing.T, context spec.G, it spec.S) {
@@ -45,7 +46,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 
 		buffer = bytes.NewBuffer(nil)
-		logger := scribe.NewLogger(buffer)
+		logger := scribe.NewEmitter(buffer)
 
 		executable = &fakes.Executable{}
 		executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
@@ -92,11 +93,22 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					ProcessLaunchEnv: map[string]packit.Environment{},
 				},
 			},
+			Launch: packit.LaunchMetadata{
+				Labels: map[string]string{
+					"org.opencontainers.image.revision": "sha123456789",
+				},
+			},
 		}))
 
-		Expect(buffer.String()).To(ContainSubstring("Some Buildpack some-version"))
-		Expect(buffer.String()).To(ContainSubstring("Configuring shared environment"))
-		Expect(buffer.String()).To(ContainSubstring(`REVISION -> "sha123456789"`))
+		Expect(buffer).To(ContainLines(
+			"Some Buildpack some-version",
+			"  Configuring build environment",
+			`    REVISION -> "sha123456789"`,
+			"",
+			"  Configuring launch environment",
+			`    REVISION -> "sha123456789"`,
+			"",
+		))
 	})
 
 	context("when the executable fails", func() {
