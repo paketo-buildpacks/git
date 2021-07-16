@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	git "github.com/paketo-buildpacks/git"
 	"github.com/paketo-buildpacks/packit"
+	"github.com/paketo-community/git"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"

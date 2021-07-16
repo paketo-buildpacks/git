@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	git "github.com/paketo-buildpacks/git"
-	"github.com/paketo-buildpacks/git/fakes"
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/pexec"
 	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-community/git"
+	"github.com/paketo-community/git/fakes"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
