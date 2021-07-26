@@ -20,11 +20,11 @@ type Executable interface {
 	Execute(pexec.Execution) (err error)
 }
 
-func Build(executable Executable, logger scribe.Logger) packit.BuildFunc {
+func Build(executable Executable, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		varsLayer, err := context.Layers.Get(LayerNameGit)
+		layer, err := context.Layers.Get(LayerNameGit)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
@@ -44,16 +44,19 @@ func Build(executable Executable, logger scribe.Logger) packit.BuildFunc {
 
 		revision := strings.TrimSpace(buffer.String())
 
-		varsLayer.Launch = true
-		varsLayer.Build = true
-		varsLayer.SharedEnv.Default("REVISION", revision)
+		layer.Launch = true
+		layer.Build = true
+		layer.SharedEnv.Default("REVISION", revision)
 
-		logger.Process("Configuring shared environment")
-		logger.Subprocess("%s", scribe.NewFormattedMapFromEnvironment(varsLayer.SharedEnv))
-		logger.Break()
+		logger.EnvironmentVariables(layer)
 
 		return packit.BuildResult{
-			Layers: []packit.Layer{varsLayer},
+			Layers: []packit.Layer{layer},
+			Launch: packit.LaunchMetadata{
+				Labels: map[string]string{
+					"org.opencontainers.image.revision": revision,
+				},
+			},
 		}, nil
 	}
 }

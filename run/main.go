@@ -15,7 +15,7 @@ func main() {
 		git.Detect(),
 		git.Build(
 			pexec.NewExecutable("git"),
-			scribe.NewLogger(os.Stdout),
+			scribe.NewEmitter(os.Stdout),
 		),
 	)
 }

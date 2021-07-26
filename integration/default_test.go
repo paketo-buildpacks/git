@@ -54,7 +54,7 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.RemoveAll(source)).To(Succeed())
 		})
 
-		it("builds an oci image with git environment variables", func() {
+		it("builds an OCI image with git environment variables", func() {
 			var err error
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
@@ -65,9 +65,14 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-				"  Configuring shared environment",
-				"    REVISION -> \"2df6ac40991b695cc6c31faa79926980ff7dc0ff\"",
+				"  Configuring build environment",
+				`    REVISION -> "2df6ac40991b695cc6c31faa79926980ff7dc0ff"`,
+				"",
+				"  Configuring launch environment",
+				`    REVISION -> "2df6ac40991b695cc6c31faa79926980ff7dc0ff"`,
 			))
+
+			Expect(image.Labels).To(HaveKeyWithValue("org.opencontainers.image.revision", "2df6ac40991b695cc6c31faa79926980ff7dc0ff"))
 
 			container, err = docker.Container.Run.
 				WithCommand("echo $REVISION").
