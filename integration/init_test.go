@@ -49,7 +49,7 @@ func TestIntegration(t *testing.T) {
 	SetDefaultEventuallyTimeout(5 * time.Second)
 
 	suite := spec.New("Integration", spec.Report(report.Terminal{}), spec.Parallel())
-	suite("Credential Configuration", testCredentialConfiguration)
+	suite("CredentialConfiguration", testCredentialConfiguration)
 	suite("Default", testDefault)
 	suite.Run(t)
 }

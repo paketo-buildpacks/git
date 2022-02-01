@@ -89,7 +89,7 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 						"config",
 						"--global",
 						"credential.helper",
-						fmt.Sprintf("!f() { cat %s; }; f", filepath.Join("some-path", "credentials")),
+						fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("some-path", "credentials")),
 					}))
 				})
 			})
@@ -120,7 +120,7 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 						"config",
 						"--global",
 						"credential.https://example.com.helper",
-						fmt.Sprintf("!f() { cat %s; }; f", filepath.Join("some-path", "credentials")),
+						fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("some-path", "credentials")),
 					}))
 				})
 			})
@@ -154,7 +154,7 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 					"config",
 					"--global",
 					"credential.helper",
-					fmt.Sprintf("!f() { cat %s; }; f", filepath.Join("some-path", "credentials")),
+					fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("some-path", "credentials")),
 				}))
 
 				Expect(executions[1].Dir).To(Equal("working-dir"))
@@ -162,7 +162,7 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 					"config",
 					"--global",
 					"credential.https://example.com.helper",
-					fmt.Sprintf("!f() { cat %s; }; f", filepath.Join("other-path", "credentials")),
+					fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("other-path", "credentials")),
 				}))
 			})
 		})
@@ -214,7 +214,7 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 
 				it("returns an error", func() {
 					err := gitCredentialManager.Setup("working-dir", platformDir)
-					Expect(err).To(MatchError("failed: there are two or more bindings for the same context: please remove limit the bindings to one per context"))
+					Expect(err).To(MatchError("failed: there are two or more bindings for the same context: please limit the bindings to one per context"))
 				})
 			})
 
