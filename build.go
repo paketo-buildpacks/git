@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/paketo-buildpacks/packit"
-	"github.com/paketo-buildpacks/packit/pexec"
-	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/pexec"
+	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
 const (
@@ -20,7 +20,12 @@ type Executable interface {
 	Execute(pexec.Execution) (err error)
 }
 
-func Build(executable Executable, logger scribe.Emitter) packit.BuildFunc {
+//go:generate faux --interface CredentialManager --output fakes/credential_manager.go
+type CredentialManager interface {
+	Setup(workingDir, platformPath string) (err error)
+}
+
+func Build(executable Executable, credentialManager CredentialManager, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -28,6 +33,9 @@ func Build(executable Executable, logger scribe.Emitter) packit.BuildFunc {
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
+
+		layer.Launch = true
+		layer.Build = true
 
 		buffer := bytes.NewBuffer(nil)
 		args := []string{"rev-parse", "HEAD"}
@@ -44,11 +52,14 @@ func Build(executable Executable, logger scribe.Emitter) packit.BuildFunc {
 
 		revision := strings.TrimSpace(buffer.String())
 
-		layer.Launch = true
-		layer.Build = true
 		layer.SharedEnv.Default("REVISION", revision)
 
 		logger.EnvironmentVariables(layer)
+
+		err = credentialManager.Setup(context.WorkingDir, context.Platform.Path)
+		if err != nil {
+			return packit.BuildResult{}, fmt.Errorf("failed to configure given credentials: %w", err)
+		}
 
 		return packit.BuildResult{
 			Layers: []packit.Layer{layer},

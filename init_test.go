@@ -11,5 +11,6 @@ func TestUnitGit(t *testing.T) {
 	suite := spec.New("git", spec.Report(report.Terminal{}), spec.Parallel())
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
+	suite("Git Credential Manager", testGitCredentialManager)
 	suite.Run(t)
 }

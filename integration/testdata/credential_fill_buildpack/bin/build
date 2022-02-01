@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o pipefail
+
+function main() {
+  echo "Paketo Credential Fill Buildpack"
+  echo url=https://example.com | git credential fill
+}
+
+main "${@:-}"

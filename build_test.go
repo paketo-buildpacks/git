@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/paketo-buildpacks/packit"
-	"github.com/paketo-buildpacks/packit/pexec"
-	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/pexec"
+	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/paketo-community/git"
 	"github.com/paketo-community/git/fakes"
 	"github.com/sclevine/spec"
@@ -28,8 +28,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir string
 		cnbDir     string
 
-		executable *fakes.Executable
-		buffer     *bytes.Buffer
+		executable        *fakes.Executable
+		credentialManager *fakes.CredentialManager
+
+		buffer *bytes.Buffer
 
 		build packit.BuildFunc
 	)
@@ -54,7 +56,9 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			return nil
 		}
 
-		build = git.Build(executable, logger)
+		credentialManager = &fakes.CredentialManager{}
+
+		build = git.Build(executable, credentialManager, logger)
 	})
 
 	it.After(func() {
@@ -67,6 +71,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		result, err := build(packit.BuildContext{
 			WorkingDir: workingDir,
 			CNBPath:    cnbDir,
+			Platform:   packit.Platform{Path: "some-platform"},
 			Stack:      "some-stack",
 			BuildpackInfo: packit.BuildpackInfo{
 				Name:    "Some Buildpack",
@@ -109,17 +114,33 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			`    REVISION -> "sha123456789"`,
 			"",
 		))
+
+		Expect(credentialManager.SetupCall.Receives.PlatformPath).To(Equal("some-platform"))
+		Expect(credentialManager.SetupCall.Receives.WorkingDir).To(Equal(workingDir))
 	})
 
-	context("when the executable fails", func() {
-		it.Before(func() {
-			executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
-				return errors.New("some-error")
-			}
+	context("failure cases", func() {
+		context("when the executable fails", func() {
+			it.Before(func() {
+				executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
+					return errors.New("some-error")
+				}
+			})
+			it("returns the error", func() {
+				_, err := build(packit.BuildContext{})
+				Expect(err).To(MatchError("failed to execute 'git rev-parse HEAD': some-error"))
+			})
 		})
-		it("returns the error", func() {
-			_, err := build(packit.BuildContext{})
-			Expect(err).To(MatchError("failed to execute 'git rev-parse HEAD': some-error"))
+
+		context("when the credential setup fails", func() {
+			it.Before(func() {
+				credentialManager.SetupCall.Returns.Err = errors.New("setup failed")
+			})
+			it("returns the error", func() {
+				_, err := build(packit.BuildContext{})
+				Expect(err).To(MatchError("failed to configure given credentials: setup failed"))
+			})
+
 		})
 	})
 }
