@@ -15,7 +15,8 @@ import (
 
 var settings struct {
 	Buildpacks struct {
-		Git string
+		Git            string
+		CredentialFill string
 	}
 	Buildpack struct {
 		Name string
@@ -43,9 +44,12 @@ func TestIntegration(t *testing.T) {
 		Execute(root)
 	Expect(err).ToNot(HaveOccurred())
 
+	settings.Buildpacks.CredentialFill = filepath.Join(root, "integration", "testdata", "credential_fill_buildpack")
+
 	SetDefaultEventuallyTimeout(5 * time.Second)
 
 	suite := spec.New("Integration", spec.Report(report.Terminal{}), spec.Parallel())
+	suite("Credential Configuration", testCredentialConfiguration)
 	suite("Default", testDefault)
 	suite.Run(t)
 }

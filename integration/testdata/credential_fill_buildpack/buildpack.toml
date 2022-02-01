@@ -1,0 +1,9 @@
+api = "0.7"
+
+[buildpack]
+  id = "paketo-community/git/credential_fill"
+  name = "Paketo Credential Fill Buildpack"
+  version = "0.0.1"
+
+[[stacks]]
+  id = "io.buildpacks.stacks.bionic"
