@@ -57,7 +57,7 @@ func (g GitCredentialManager) Setup(workingDir, platformDir string) error {
 		if !exists {
 			uniqueContext[context] = nil
 		} else {
-			return fmt.Errorf("failed: there are two or more bindings for the same context: please remove limit the bindings to one per context")
+			return fmt.Errorf("failed: there are two or more bindings for the same context: please limit the bindings to one per context")
 		}
 
 		buffer := bytes.NewBuffer(nil)
@@ -66,7 +66,7 @@ func (g GitCredentialManager) Setup(workingDir, platformDir string) error {
 				"config",
 				"--global",
 				context,
-				fmt.Sprintf("!f() { cat %s; }; f", filepath.Join(b.Path, "credentials")),
+				fmt.Sprintf("!f() { cat %q; }; f", filepath.Join(b.Path, "credentials")),
 			},
 			Dir:    workingDir,
 			Stdout: buffer,
