@@ -83,6 +83,7 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 				`    REVISION -> "2df6ac40991b695cc6c31faa79926980ff7dc0ff"`,
 				"",
 				"  Configuring credentials",
+				"  Added 1 custom git credential manager(s) to the git config",
 				"",
 				"Paketo Credential Fill Buildpack",
 				"protocol=https",
