@@ -31,12 +31,17 @@ func NewGitCredentialManager(bindingResolver BindingResolver, executable Executa
 }
 
 func (g GitCredentialManager) Setup(workingDir, platformDir string) error {
-	g.logs.Process("Configuring credentials")
-
 	bindings, err := g.bindingResolver.Resolve("git-credentials", "", platformDir)
 	if err != nil {
 		return err
 	}
+
+	if len(bindings) == 0 {
+		// If there are no bindings then we are done
+		return nil
+	}
+
+	g.logs.Process("Configuring credentials")
 
 	uniqueContext := map[string]interface{}{}
 
@@ -80,6 +85,7 @@ func (g GitCredentialManager) Setup(workingDir, platformDir string) error {
 
 	}
 
+	g.logs.Process("Added %d custom git credential manager(s) to the git config", len(uniqueContext))
 	g.logs.Break()
 	return nil
 }

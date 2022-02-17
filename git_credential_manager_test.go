@@ -64,6 +64,8 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 
 				Expect(bindingResolver.ResolveCall.Receives.PlatformDir).To(Equal(platformDir))
 				Expect(executable.ExecuteCall.CallCount).To(Equal(0))
+
+				Expect(buffer.String()).ToNot(ContainSubstring("Configuring credentials"))
 			})
 		})
 
@@ -91,6 +93,9 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 						"credential.helper",
 						fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("some-path", "credentials")),
 					}))
+
+					Expect(buffer.String()).To(ContainSubstring("Configuring credentials"))
+					Expect(buffer.String()).To(ContainSubstring("Added 1 custom git credential manager(s) to the git config"))
 				})
 			})
 
@@ -164,6 +169,9 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 					"credential.https://example.com.helper",
 					fmt.Sprintf("!f() { cat %q; }; f", filepath.Join("other-path", "credentials")),
 				}))
+
+				Expect(buffer.String()).To(ContainSubstring("Configuring credentials"))
+				Expect(buffer.String()).To(ContainSubstring("Added 2 custom git credential manager(s) to the git config"))
 			})
 		})
 
