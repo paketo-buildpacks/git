@@ -41,7 +41,7 @@ func Build(executable Executable, credentialManager CredentialManager, logger sc
 
 		exist, err := fs.Exists(filepath.Join(context.WorkingDir, ".git"))
 		if err != nil {
-			panic(err)
+			return packit.BuildResult{}, err
 		}
 
 		var buildResult packit.BuildResult

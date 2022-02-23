@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -26,7 +25,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		layersDir  string
 		workingDir string
-		cnbDir     string
 
 		executable        *fakes.Executable
 		credentialManager *fakes.CredentialManager
@@ -38,13 +36,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		layersDir, err = ioutil.TempDir("", "layers")
+		layersDir, err = os.MkdirTemp("", "layers")
 		Expect(err).NotTo(HaveOccurred())
 
-		cnbDir, err = ioutil.TempDir("", "cnb")
-		Expect(err).NotTo(HaveOccurred())
-
-		workingDir, err = ioutil.TempDir("", "working-dir")
+		workingDir, err = os.MkdirTemp("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
 		buffer = bytes.NewBuffer(nil)
@@ -63,7 +58,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	it.After(func() {
 		Expect(os.RemoveAll(layersDir)).To(Succeed())
-		Expect(os.RemoveAll(cnbDir)).To(Succeed())
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
@@ -74,15 +68,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		it("returns a result that builds correctly", func() {
 			result, err := build(packit.BuildContext{
 				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
 				Platform:   packit.Platform{Path: "some-platform"},
-				Stack:      "some-stack",
 				BuildpackInfo: packit.BuildpackInfo{
 					Name:    "Some Buildpack",
 					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
 				},
 				Layers: packit.Layers{Path: layersDir},
 			})
@@ -124,27 +113,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		it("returns a result that builds correctly", func() {
 			result, err := build(packit.BuildContext{
 				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
 				Platform:   packit.Platform{Path: "some-platform"},
-				Stack:      "some-stack",
 				BuildpackInfo: packit.BuildpackInfo{
 					Name:    "Some Buildpack",
 					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
 				},
 				Layers: packit.Layers{Path: layersDir},
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(result.Layers).To(HaveLen(1))
-			layer := result.Layers[0]
-
-			Expect(layer.Name).To(Equal("git"))
-			Expect(layer.Path).To(Equal(filepath.Join(layersDir, "git")))
-			Expect(layer.Build).To(BeTrue())
-			Expect(layer.Launch).To(BeTrue())
+			Expect(result.Layers).To(HaveLen(0))
 
 			Expect(buffer).NotTo(ContainLines(
 				"Some Buildpack some-version",
@@ -164,6 +142,23 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("failure cases", func() {
+		context("when the exists check fails", func() {
+			it.Before(func() {
+				Expect(os.Chmod(workingDir, 0000)).To(Succeed())
+			})
+			it.After(func() {
+				Expect(os.Chmod(workingDir, os.ModePerm)).To(Succeed())
+			})
+			it("returns the error", func() {
+				_, err := build(packit.BuildContext{
+					WorkingDir: workingDir,
+					Platform:   packit.Platform{Path: "some-platform"},
+					Layers:     packit.Layers{Path: layersDir},
+				})
+				Expect(err).To(MatchError(ContainSubstring("permission denied")))
+			})
+		})
+
 		context("when the executable fails", func() {
 			it.Before(func() {
 				executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
