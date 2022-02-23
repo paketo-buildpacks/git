@@ -3,9 +3,11 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/fs"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
@@ -37,37 +39,47 @@ func Build(executable Executable, credentialManager CredentialManager, logger sc
 		layer.Launch = true
 		layer.Build = true
 
-		buffer := bytes.NewBuffer(nil)
-		args := []string{"rev-parse", "HEAD"}
-		err = executable.Execute(pexec.Execution{
-			Args:   args,
-			Dir:    context.WorkingDir,
-			Stdout: buffer,
-			Stderr: buffer,
-		})
+		exist, err := fs.Exists(filepath.Join(context.WorkingDir, ".git"))
 		if err != nil {
-			logger.Detail(buffer.String())
-			return packit.BuildResult{}, fmt.Errorf("failed to execute 'git rev-parse HEAD': %w", err)
+			panic(err)
 		}
 
-		revision := strings.TrimSpace(buffer.String())
+		var buildResult packit.BuildResult
+		if exist {
+			buffer := bytes.NewBuffer(nil)
+			args := []string{"rev-parse", "HEAD"}
+			err = executable.Execute(pexec.Execution{
+				Args:   args,
+				Dir:    context.WorkingDir,
+				Stdout: buffer,
+				Stderr: buffer,
+			})
+			if err != nil {
+				logger.Detail(buffer.String())
+				return packit.BuildResult{}, fmt.Errorf("failed to execute 'git rev-parse HEAD': %w", err)
+			}
 
-		layer.SharedEnv.Default("REVISION", revision)
+			revision := strings.TrimSpace(buffer.String())
 
-		logger.EnvironmentVariables(layer)
+			layer.SharedEnv.Default("REVISION", revision)
+
+			logger.EnvironmentVariables(layer)
+
+			buildResult = packit.BuildResult{
+				Layers: []packit.Layer{layer},
+				Launch: packit.LaunchMetadata{
+					Labels: map[string]string{
+						"org.opencontainers.image.revision": revision,
+					},
+				},
+			}
+		}
 
 		err = credentialManager.Setup(context.WorkingDir, context.Platform.Path)
 		if err != nil {
 			return packit.BuildResult{}, fmt.Errorf("failed to configure given credentials: %w", err)
 		}
 
-		return packit.BuildResult{
-			Layers: []packit.Layer{layer},
-			Launch: packit.LaunchMetadata{
-				Labels: map[string]string{
-					"org.opencontainers.image.revision": revision,
-				},
-			},
-		}, nil
+		return buildResult, nil
 	}
 }

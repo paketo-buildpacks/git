@@ -16,7 +16,7 @@ func main() {
 	bindingResolver := servicebindings.NewResolver()
 
 	packit.Run(
-		git.Detect(),
+		git.Detect(bindingResolver),
 		git.Build(
 			executable,
 			git.NewGitCredentialManager(bindingResolver, executable, emitter),
