@@ -67,56 +67,100 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
-	it("returns a result that builds correctly", func() {
-		result, err := build(packit.BuildContext{
-			WorkingDir: workingDir,
-			CNBPath:    cnbDir,
-			Platform:   packit.Platform{Path: "some-platform"},
-			Stack:      "some-stack",
-			BuildpackInfo: packit.BuildpackInfo{
-				Name:    "Some Buildpack",
-				Version: "some-version",
-			},
-			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{},
-			},
-			Layers: packit.Layers{Path: layersDir},
+	context("when there is a .git directory in the workingDir", func() {
+		it.Before(func() {
+			Expect(os.MkdirAll(filepath.Join(workingDir, ".git"), os.ModePerm)).To(Succeed())
 		})
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(result).To(Equal(packit.BuildResult{
-			Plan: packit.BuildpackPlan{Entries: nil},
-			Layers: []packit.Layer{
-				{
-					Name:             "git",
-					Path:             filepath.Join(layersDir, "git"),
-					Build:            true,
-					Launch:           true,
-					LaunchEnv:        packit.Environment{},
-					SharedEnv:        map[string]string{"REVISION.default": "sha123456789"},
-					BuildEnv:         packit.Environment{},
-					ProcessLaunchEnv: map[string]packit.Environment{},
+		it("returns a result that builds correctly", func() {
+			result, err := build(packit.BuildContext{
+				WorkingDir: workingDir,
+				CNBPath:    cnbDir,
+				Platform:   packit.Platform{Path: "some-platform"},
+				Stack:      "some-stack",
+				BuildpackInfo: packit.BuildpackInfo{
+					Name:    "Some Buildpack",
+					Version: "some-version",
 				},
-			},
-			Launch: packit.LaunchMetadata{
+				Plan: packit.BuildpackPlan{
+					Entries: []packit.BuildpackPlanEntry{},
+				},
+				Layers: packit.Layers{Path: layersDir},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result.Layers).To(HaveLen(1))
+			layer := result.Layers[0]
+
+			Expect(layer.Name).To(Equal("git"))
+			Expect(layer.Path).To(Equal(filepath.Join(layersDir, "git")))
+			Expect(layer.Build).To(BeTrue())
+			Expect(layer.Launch).To(BeTrue())
+			Expect(layer.SharedEnv).To(Equal(packit.Environment{"REVISION.default": "sha123456789"}))
+
+			Expect(result.Launch).To(Equal(packit.LaunchMetadata{
 				Labels: map[string]string{
 					"org.opencontainers.image.revision": "sha123456789",
 				},
-			},
-		}))
+			}))
 
-		Expect(buffer).To(ContainLines(
-			"Some Buildpack some-version",
-			"  Configuring build environment",
-			`    REVISION -> "sha123456789"`,
-			"",
-			"  Configuring launch environment",
-			`    REVISION -> "sha123456789"`,
-			"",
-		))
+			Expect(buffer).To(ContainLines(
+				"Some Buildpack some-version",
+				"  Configuring build environment",
+				`    REVISION -> "sha123456789"`,
+				"",
+				"  Configuring launch environment",
+				`    REVISION -> "sha123456789"`,
+				"",
+			))
 
-		Expect(credentialManager.SetupCall.Receives.PlatformPath).To(Equal("some-platform"))
-		Expect(credentialManager.SetupCall.Receives.WorkingDir).To(Equal(workingDir))
+			Expect(executable.ExecuteCall.Receives.Execution.Args).To(Equal([]string{"rev-parse", "HEAD"}))
+
+			Expect(credentialManager.SetupCall.Receives.PlatformPath).To(Equal("some-platform"))
+			Expect(credentialManager.SetupCall.Receives.WorkingDir).To(Equal(workingDir))
+		})
+	})
+
+	context("when there is not a .git directory in the workingDir", func() {
+		it("returns a result that builds correctly", func() {
+			result, err := build(packit.BuildContext{
+				WorkingDir: workingDir,
+				CNBPath:    cnbDir,
+				Platform:   packit.Platform{Path: "some-platform"},
+				Stack:      "some-stack",
+				BuildpackInfo: packit.BuildpackInfo{
+					Name:    "Some Buildpack",
+					Version: "some-version",
+				},
+				Plan: packit.BuildpackPlan{
+					Entries: []packit.BuildpackPlanEntry{},
+				},
+				Layers: packit.Layers{Path: layersDir},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result.Layers).To(HaveLen(1))
+			layer := result.Layers[0]
+
+			Expect(layer.Name).To(Equal("git"))
+			Expect(layer.Path).To(Equal(filepath.Join(layersDir, "git")))
+			Expect(layer.Build).To(BeTrue())
+			Expect(layer.Launch).To(BeTrue())
+
+			Expect(buffer).NotTo(ContainLines(
+				"Some Buildpack some-version",
+				"  Configuring build environment",
+				`    REVISION -> "sha123456789"`,
+				"",
+				"  Configuring launch environment",
+				`    REVISION -> "sha123456789"`,
+				"",
+			))
+
+			Expect(executable.ExecuteCall.CallCount).To(Equal(0))
+
+			Expect(credentialManager.SetupCall.Receives.PlatformPath).To(Equal("some-platform"))
+			Expect(credentialManager.SetupCall.Receives.WorkingDir).To(Equal(workingDir))
+		})
 	})
 
 	context("failure cases", func() {
