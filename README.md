@@ -2,7 +2,7 @@
 The Paketo Git Buildpack is a Cloud Native Buildpack that retreives `git` metadata and preforms `git` operations.
 
 ## Behavior
-This buildpack will only participate if there is a valid `.git` directory in the application source directory.
+This buildpack uses the `git` dependency off of the stack that it is running on top of. The Git buildpack will only participate if there is a valid `.git` directory in the application source directory.
 
 The buildpack will do the following:
 
