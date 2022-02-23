@@ -1,5 +1,5 @@
 # Paketo Git Buildpack
-The Paketo Git Buildpack is a Cloud Native Buildpack that retreives `git` metadata and preforms `git` operations.
+The Paketo Git Buildpack is a Cloud Native Buildpack that retrieves `git` metadata and performs `git` operations.
 
 ## Behavior
 This buildpack uses the `git` dependency off of the stack that it is running on top of. The Git buildpack will only participate if there is a valid `.git` directory in the application source directory.
@@ -16,4 +16,4 @@ The buildpack optionally accepts the following bindings:
 |Key                   | Value   | Description
 |----------------------|---------|------------
 |`credentials` | `<formated git credentials>` | The credentials file should have the following format to conform with the [`git` credential structure](https://git-scm.com/docs/git-credential#IOFMT).
-|`context` (optional) | `<url>` |The context is an [optional pattern](https://git-scm.com/docs/gitcredentials#_credential_contexts) as defined by `git`. If a context is not provided then the credentials given in the binding will be the default credentials the `git` uses when authenticating. A given context can only be used once for any group of bindings, if a context is given by two separate bindings the build will fail.
+|`context` (optional) | `<url>` |The context is an [optional pattern](https://git-scm.com/docs/gitcredentials#_credential_contexts) as defined by `git`. If a context is not provided then the credentials given in the binding will be the default credentials that `git` uses when authenticating. A given context can only be used once for any group of bindings, if a context is given by two separate bindings the build will fail.
