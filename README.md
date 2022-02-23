@@ -7,6 +7,7 @@ This buildpack uses the `git` dependency off of the stack that it is running on 
 The buildpack will do the following:
 
 - Sets the `REVISION` environment variable, which is the commitish of HEAD, to be available for the build processes of other buildpacks and in the final running image.
+- Sets the `org.opencontainers.image.revision` label with the same commitish as the `REVISION` environment variable.
 - Creates custom `git` credential managers if it is provided with credentials through a binding.
 
 ## Bindings
