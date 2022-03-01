@@ -7,7 +7,7 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/paketo-buildpacks/packit/v2/servicebindings"
-	"github.com/paketo-community/git"
+	"github.com/paketo-buildpacks/git"
 )
 
 func main() {

@@ -11,8 +11,8 @@ import (
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/pexec"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
-	"github.com/paketo-community/git"
-	"github.com/paketo-community/git/fakes"
+	"github.com/paketo-buildpacks/git"
+	"github.com/paketo-buildpacks/git/fakes"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
