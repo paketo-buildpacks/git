@@ -15,8 +15,7 @@ import (
 
 func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 	var (
-		Expect     = NewWithT(t).Expect
-		Eventually = NewWithT(t).Eventually
+		Expect = NewWithT(t).Expect
 
 		pack   occam.Pack
 		docker occam.Docker
@@ -29,11 +28,10 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 
 	context("when building a simple app that configures credentials", func() {
 		var (
-			image     occam.Image
-			container occam.Container
-			root      string
-			name      string
-			source    string
+			image  occam.Image
+			root   string
+			name   string
+			source string
 		)
 
 		it.Before(func() {
@@ -44,15 +42,11 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 			source, err = occam.Source(filepath.Join("testdata", "default_app"))
 			Expect(err).NotTo(HaveOccurred())
 
-			err = os.Rename(filepath.Join(source, ".git.bak"), filepath.Join(source, ".git"))
-			Expect(err).NotTo(HaveOccurred())
-
 			root, err = filepath.Abs("./..")
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		it.After(func() {
-			Expect(docker.Container.Remove.Execute(container.ID)).To(Succeed())
 			Expect(docker.Image.Remove.Execute(image.ID)).To(Succeed())
 			Expect(docker.Volume.Remove.Execute(occam.CacheVolumeNames(name))).To(Succeed())
 			Expect(os.RemoveAll(source)).To(Succeed())
@@ -76,12 +70,6 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-				"  Configuring build environment",
-				`    REVISION -> "2df6ac40991b695cc6c31faa79926980ff7dc0ff"`,
-				"",
-				"  Configuring launch environment",
-				`    REVISION -> "2df6ac40991b695cc6c31faa79926980ff7dc0ff"`,
-				"",
 				"  Configuring credentials",
 				"  Added 1 custom git credential manager(s) to the git config",
 				"",
@@ -91,18 +79,6 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 				"username=username",
 				"password=password/token",
 			))
-
-			Expect(image.Labels).To(HaveKeyWithValue("org.opencontainers.image.revision", "2df6ac40991b695cc6c31faa79926980ff7dc0ff"))
-
-			container, err = docker.Container.Run.
-				WithCommand("echo $REVISION").
-				Execute(image.ID)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(func() string {
-				logs, _ := docker.Container.Logs.Execute(container.ID)
-				return logs.String()
-			}).Should(ContainSubstring("2df6ac40991b695cc6c31faa79926980ff7dc0ff"))
 		})
 	})
 }
