@@ -5,7 +5,7 @@ set -u
 set -o pipefail
 
 function main() {
-  echo "Paketo Credential Fill Buildpack"
+  echo "Paketo Buildpack for Credential Fill"
   echo url=https://example.com | git credential fill
 }
 
