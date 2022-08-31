@@ -73,7 +73,7 @@ func testCredentialConfiguration(t *testing.T, context spec.G, it spec.S) {
 				"  Configuring credentials",
 				"  Added 1 custom git credential manager(s) to the git config",
 				"",
-				"Paketo Credential Fill Buildpack",
+				"Paketo Buildpack for Credential Fill",
 				"protocol=https",
 				"host=example.com",
 				"username=username",
