@@ -2,7 +2,7 @@ api = "0.7"
 
 [buildpack]
   id = "paketo-buildpacks/git/credential_fill"
-  name = "Paketo Credential Fill Buildpack"
+  name = "Paketo Buildpack for Credential Fill "
   version = "0.0.1"
 
 [[stacks]]
