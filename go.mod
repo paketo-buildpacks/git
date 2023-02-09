@@ -10,11 +10,11 @@ require (
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587 // indirect
 	github.com/onsi/gomega v1.26.0
 	github.com/opencontainers/runc v1.1.4 // indirect
-	github.com/paketo-buildpacks/occam v0.15.0
+	github.com/paketo-buildpacks/occam v0.15.1
 	github.com/paketo-buildpacks/packit/v2 v2.8.1
 	github.com/sclevine/spec v1.4.0
-	github.com/testcontainers/testcontainers-go v0.17.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
 	google.golang.org/grpc v1.52.3 // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 )
