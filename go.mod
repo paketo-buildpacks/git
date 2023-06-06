@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
-	github.com/BurntSushi/toml v1.3.0
+	github.com/BurntSushi/toml v1.3.1
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587 // indirect
 	github.com/onsi/gomega v1.27.7
 	github.com/paketo-buildpacks/occam v0.16.0
