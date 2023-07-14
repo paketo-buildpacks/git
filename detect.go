@@ -1,15 +1,17 @@
 package git
 
 import (
+	"errors"
+	"io/fs"
+	"os"
 	"path/filepath"
 
 	"github.com/paketo-buildpacks/packit/v2"
-	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
 func Detect(bindingResolver BindingResolver) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
-		exist, err := fs.Exists(filepath.Join(context.WorkingDir, ".git"))
+		exist, err := gitDirExists(context.WorkingDir)
 		if err != nil {
 			return packit.DetectResult{}, err
 		}
@@ -25,4 +27,17 @@ func Detect(bindingResolver BindingResolver) packit.DetectFunc {
 
 		return packit.DetectResult{}, nil
 	}
+}
+
+func gitDirExists(workingDir string) (bool, error) {
+	info, err := os.Stat(filepath.Join(workingDir, ".git"))
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return info.IsDir(), nil
 }
