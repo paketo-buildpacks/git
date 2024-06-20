@@ -8,11 +8,12 @@ import (
 
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/servicebindings"
+
 	"github.com/paketo-buildpacks/git"
 	"github.com/paketo-buildpacks/git/fakes"
-	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
+	"github.com/sclevine/spec"
 )
 
 func testDetect(t *testing.T, context spec.G, it spec.S) {
@@ -59,6 +60,21 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("when a .git directory is not present", func() {
+		context("when in a submodule (.git is a file, not dir)", func() {
+			it.Before(func() {
+				err := os.WriteFile(filepath.Join(workingDir, ".git"), nil, os.ModePerm)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("fails detections", func() {
+				_, err := detect(packit.DetectContext{
+					WorkingDir: workingDir,
+					Platform:   packit.Platform{Path: "some-platform"},
+				})
+				Expect(err).To(MatchError(packit.Fail.WithMessage("failed to find .git directory and no git credential service bindings present")))
+			})
+		})
+
 		context("when there are no git-credentials service bindings", func() {
 			it("fails detections", func() {
 				_, err := detect(packit.DetectContext{
