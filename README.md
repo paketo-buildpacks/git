@@ -1,6 +1,8 @@
 # Paketo Buildpack for Git
 The Paketo Buildpack for Git is a Cloud Native Buildpack that retrieves `git` metadata and performs `git` operations.
 
+The buildpack is published to DockerHub for consumption at `paketobuildpacks/git`.
+
 ## Behavior
 This buildpack uses the `git` dependency off of the stack that it is running on top of. The Git buildpack will only participate if there is a valid `.git` directory in the application source directory or if there a `git-credentials` service bindings present.
 

@@ -1,0 +1,5 @@
+{
+  "builders": [
+    "index.docker.io/paketobuildpacks/ubuntu-noble-builder-buildpackless:latest"
+  ]
+}
