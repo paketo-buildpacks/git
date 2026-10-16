@@ -235,8 +235,8 @@ func testGitCredentialManager(t *testing.T, context spec.G, it spec.S) {
 					}
 
 					executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
-						fmt.Fprintln(execution.Stdout, "build error stdout")
-						fmt.Fprintln(execution.Stderr, "build error stderr")
+						_, _ = fmt.Fprintln(execution.Stdout, "build error stdout")
+						_, _ = fmt.Fprintln(execution.Stderr, "build error stderr")
 						return errors.New("command failed")
 					}
 				})

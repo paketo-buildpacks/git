@@ -47,7 +47,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		executable = &fakes.Executable{}
 		executable.ExecuteCall.Stub = func(execution pexec.Execution) error {
-			fmt.Fprintf(execution.Stdout, "sha123456789")
+			_, _ = fmt.Fprintf(execution.Stdout, "sha123456789")
 			return nil
 		}
 
